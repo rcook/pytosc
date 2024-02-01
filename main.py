@@ -1,4 +1,4 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, BooleanOptionalAction
 from colorama import Fore
 from pytosc.path import file_path
 from pytosc.ui import cprint
@@ -16,12 +16,13 @@ class UserError(RuntimeError):
     pass
 
 
-def do_extract_xml(app, input_path, output_path):
+def do_extract_xml(app, input_path, output_path, force_overwrite):
     if output_path is None:
         output_path = input_path + ".xml"
 
-    if os.path.exists(output_path):
-        raise UserError(f"Output file {output_path} already exists")
+    if not force_overwrite and os.path.exists(output_path):
+        raise UserError(
+            f"Output file {output_path} already exists: pass --force to overwrite")
 
     with open(input_path, "rb") as f:
         data = zlib.decompress(f.read())
@@ -46,7 +47,8 @@ def main(cwd, argv):
         do_extract_xml(
             app=app,
             input_path=args.input_path,
-            output_path=args.output_path))
+            output_path=args.output_path,
+            force_overwrite=args.force_overwrite))
     p.add_argument(
         "--output-path",
         "-o",
@@ -54,6 +56,14 @@ def main(cwd, argv):
         type=file_path_type,
         required=False,
         help="path to output .xml file")
+    p.add_argument(
+        "--force",
+        "-f",
+        dest="force_overwrite",
+        action=BooleanOptionalAction,
+        default=False,
+        required=False,
+        help="force overwrite of output file if it already exists")
     p.add_argument(
         "input_path",
         type=file_path_type,
