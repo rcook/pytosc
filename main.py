@@ -106,7 +106,7 @@ def main(cwd, argv):
                 "action": BooleanOptionalAction,
                 "default": False,
                 "required": False,
-                "help": "force overwrite of output file if it already exists",
+                "help": "force overwrite of output file if it already exists (default: False)",
                 **kwargs
             })
 
@@ -129,13 +129,13 @@ def main(cwd, argv):
     add_output_path_arg(p, help="path to output .xml file")
     add_force_overwrite_arg(p)
     p.add_argument(
-        "--pretty-xml",
+        "--pretty",
         "-p",
         dest="pretty_xml",
         action=BooleanOptionalAction,
-        default=False,
+        default=True,
         required=False,
-        help="pretty-print XML output")
+        help="pretty-print XML output (default: True)")
 
     p = subparsers.add_parser("make-tosc")
     p.set_defaults(
@@ -150,13 +150,13 @@ def main(cwd, argv):
     add_output_path_arg(p, help="path to output .tosc file")
     add_force_overwrite_arg(p)
     p.add_argument(
-        "--shrink-xml",
+        "--shrink",
         "-s",
         dest="shrink_xml",
         action=BooleanOptionalAction,
-        default=False,
+        default=True,
         required=False,
-        help="shrink XML before compressing")
+        help="shrink XML before compressing (default: True)")
 
     args = parser.parse_args(argv)
     app = App()
