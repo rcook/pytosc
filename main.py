@@ -162,12 +162,18 @@ def main(cwd, argv):
     app = App()
 
     try:
-        args.func(app=app, args=args)
+        return args.func(app=app, args=args)
     except UserError as e:
         cprint(Fore.LIGHTRED_EX, e, file=sys.stderr)
-        sys.exit(1)
+        return False
 
 
 if __name__ == "__main__":
     colorama.just_fix_windows_console()
-    main(cwd=os.getcwd(), argv=sys.argv[1:])
+    result = main(cwd=os.getcwd(), argv=sys.argv[1:])
+    if isinstance(result, bool):
+        sys.exit(0 if result else 1)
+    elif isinstance(result, int):
+        sys.exit(result)
+    else:
+        sys.exit(0 if result is None else 1)
