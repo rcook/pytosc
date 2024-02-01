@@ -1,19 +1,13 @@
 from argparse import ArgumentParser, BooleanOptionalAction
 from colorama import Fore
+from pytosc.app import App
+from pytosc.error import UserError
 from pytosc.path import file_path
 from pytosc.ui import cprint
 import colorama
 import os
 import sys
 import zlib
-
-
-class App:
-    pass
-
-
-class UserError(RuntimeError):
-    pass
 
 
 def do_extract_xml(app, input_path, output_path, force_overwrite):
