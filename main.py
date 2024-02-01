@@ -8,14 +8,22 @@ from pytosc.zlib import is_zlib_file
 import colorama
 import os
 import sys
+import xml.etree.ElementTree as ET
 import zlib
 
 
 TOSC_EXT = ".tosc"
 XML_EXT = ".xml"
+XML_INDENT = "  "
 
 
-def do_extract_xml(app, input_path, output_path, force_overwrite):
+def check_output_file(output_path, force_overwrite):
+    if not force_overwrite and os.path.exists(output_path):
+        raise UserError(
+            f"Output file {output_path} already exists: pass --force to overwrite")
+
+
+def do_extract_xml(app, input_path, output_path, pretty_xml, force_overwrite):
     if output_path is None:
         output_path = input_path + XML_EXT
 
@@ -29,17 +37,16 @@ def do_extract_xml(app, input_path, output_path, force_overwrite):
     with open(input_path, "rb") as f:
         data = zlib.decompress(f.read())
 
+    if pretty_xml:
+        tree = ET.fromstring(data)
+        ET.indent(tree, space=XML_INDENT, level=0)
+        data = ET.tostring(tree, encoding="utf-8")
+
     with open(output_path, "wb") as f:
         f.write(data)
 
 
-def check_output_file(output_path, force_overwrite):
-    if not force_overwrite and os.path.exists(output_path):
-        raise UserError(
-            f"Output file {output_path} already exists: pass --force to overwrite")
-
-
-def do_make_tosc(app, input_path, output_path, force_overwrite):
+def do_make_tosc(app, input_path, output_path, shrink_xml, force_overwrite):
     if output_path is None:
         if input_path.endswith(TOSC_EXT + XML_EXT):
             output_path = input_path[0:-len(XML_EXT)]
@@ -57,6 +64,11 @@ def do_make_tosc(app, input_path, output_path, force_overwrite):
 
     with open(input_path, "rb") as f:
         data = f.read()
+
+    if shrink_xml:
+        tree = ET.fromstring(data)
+        ET.indent(tree, space="", level=0)
+        data = ET.tostring(tree, encoding="utf-8")
 
     with open(output_path, "wb") as f:
         f.write(zlib.compress(data))
@@ -111,10 +123,19 @@ def main(cwd, argv):
             app=app,
             input_path=args.input_path,
             output_path=args.output_path,
+            pretty_xml=args.pretty_xml,
             force_overwrite=args.force_overwrite))
     add_input_path_arg(p, help="path to input .tosc file")
     add_output_path_arg(p, help="path to output .xml file")
     add_force_overwrite_arg(p)
+    p.add_argument(
+        "--pretty-xml",
+        "-p",
+        dest="pretty_xml",
+        action=BooleanOptionalAction,
+        default=False,
+        required=False,
+        help="pretty-print XML output")
 
     p = subparsers.add_parser("make-tosc")
     p.set_defaults(
@@ -123,10 +144,19 @@ def main(cwd, argv):
             app=app,
             input_path=args.input_path,
             output_path=args.output_path,
+            shrink_xml=args.shrink_xml,
             force_overwrite=args.force_overwrite))
     add_input_path_arg(p, help="path to input .xml file")
     add_output_path_arg(p, help="path to output .tosc file")
     add_force_overwrite_arg(p)
+    p.add_argument(
+        "--shrink-xml",
+        "-s",
+        dest="shrink_xml",
+        action=BooleanOptionalAction,
+        default=False,
+        required=False,
+        help="shrink XML before compressing")
 
     args = parser.parse_args(argv)
     app = App()
