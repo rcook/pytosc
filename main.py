@@ -4,6 +4,7 @@ from pytosc.app import App
 from pytosc.error import UserError
 from pytosc.path import file_path
 from pytosc.ui import cprint
+from pytosc.zlib import is_zlib_file
 import colorama
 import os
 import sys
@@ -21,6 +22,9 @@ def do_extract_xml(app, input_path, output_path, force_overwrite):
     check_output_file(
         output_path=output_path,
         force_overwrite=force_overwrite)
+
+    if not is_zlib_file(input_path):
+        raise UserError(f"Input file {input_path} is not a zlib stream")
 
     with open(input_path, "rb") as f:
         data = zlib.decompress(f.read())
@@ -47,6 +51,9 @@ def do_make_tosc(app, input_path, output_path, force_overwrite):
     check_output_file(
         output_path=output_path,
         force_overwrite=force_overwrite)
+
+    if is_zlib_file(input_path):
+        raise UserError(f"Input file {input_path} is already a zlib stream")
 
     with open(input_path, "rb") as f:
         data = f.read()
